@@ -1,5 +1,6 @@
 import os
 import re
+import warnings
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -8,6 +9,10 @@ from langchain_community.vectorstores import Chroma
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 from langchain_google_genai._common import GoogleGenerativeAIError
+
+# Suppress deprecation warnings for langchain-community and Chroma
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="langchain_community")
+warnings.filterwarnings("ignore", message=".*Chroma.*deprecated.*")
 
 # Load environment variables from the .env file
 load_dotenv()
@@ -76,6 +81,8 @@ def fallback_answer(question, documents):
         return "I could not retrieve a relevant passage from the PDF."
 
     excerpt = best_chunk[:1200]
+    excerpt = excerpt.encode('utf-8', errors='replace').decode('utf-8', errors='replace')
+    
     if "soft" in excerpt.lower() and "computing" in excerpt.lower():
         return excerpt
 
